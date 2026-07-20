@@ -1,0 +1,21 @@
+# Credentials and Private Keys
+*.json
+!workflow.json
+*.key
+*.pem
+.env
+.env.*
+
+# Local media assets and temporary files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.mp4
+*.csv
+*.xlsx
+
+# Operating System system files
+.DS_Store
+Thumbs.db
