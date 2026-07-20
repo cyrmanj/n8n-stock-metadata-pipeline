@@ -1,0 +1,362 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "286c6068-0618-4a50-a8bc-33db465bf809",
+      "name": "Download file",
+      "credentials": {
+        "googleApi": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash"
+        },
+        "text": "Analyze this high-resolution photo and generate optimized stock photography metadata. Return your response in clean plain text with the following three distinct sections:\n\nTitle: [Provide a concise, highly descriptive commercial title between 5-10 words, highlighting the primary subject and mood without fluff words]\n\nDescription: [Provide a detailed 1-2 sentence SEO-optimized description explaining exactly what is visible in the frame, the context, and any notable design elements. Make sure it is adobe stock-compliant description (no more than 200 characters, don't add the amount of characters within parenthesis after the description.) Make the description ample, verbose, appealing and with many potential searchable words related to the capture and that can enhance the commercial value. ]\n\nKeywords: [Provide a comma-separated list of exactly 50 highly relevant, high-velocity search keywords. Include dominant colors, subject matter, style, conceptual themes, and technical traits, all separated by commas. Sort the keywords from most relevant to least relevant to enhance commercial value]\n\nCategory: [Define which primary and secondary category the image must be uploaded]\n\n",
+        "inputType": "binary",
+        "options": {
+          "maxOutputTokens": 2000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "2b8c8c1c-cf84-40f5-b0ea-eabb96b9c13e",
+      "name": "Analyze an image",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        224,
+        192
+      ],
+      "id": "373b0320-069e-4ec2-b18a-7169d11ca992",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 4
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        192
+      ],
+      "id": "8f76e420-5ac7-44de-bc72-18a0ffb9a568",
+      "name": "Wait",
+      "webhookId": "f9a3324d-e5ba-4eb0-8c00-9c7491ce6312"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID_HERE",
+          "mode": "list",
+          "cachedResultName": "REMOVED_FILENAME",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet 1",
+          "cachedResultUrl": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Filename": "={{ $('Loop Over Items').item.json.name }}",
+            "Description": "={{ $json.extractedDescription }}\n",
+            "Category": "1",
+            "Title": "={{ $json.extractedTitle }}",
+            "Keywords": "={{ $json.extractedKeywords }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Filename",
+              "displayName": "Filename",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Keywords",
+              "displayName": "Keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Releases",
+              "displayName": "Releases",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        176
+      ],
+      "id": "ec24111c-edfe-4eef-85e9-614d9e4088dc",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Capture the first item from the input stream\nconst inputItem = $input.item;\nconst rawText = inputItem.json.content.parts[0].text;\n\n// Variables to store extracted metadata\nlet title = '';\nlet description = '';\nlet keywords = '';\n\n// Normalize text: remove carriage returns and trim spaces\nconst cleanText = rawText.replace(/\\r/g, '').trim();\n\n// 1. EXTRACT TITLE: Search between \"Title:\" and \"Description:\"\nconst titleStart = cleanText.search(/Title:/i);\nconst descStart = cleanText.search(/Description:/i);\nconst keyStart = cleanText.search(/Keywords:/i);\n\nif (titleStart !== -1 && descStart !== -1) {\n  title = cleanText.substring(titleStart + 6, descStart).trim();\n}\n\n// 2. EXTRACT DESCRIPTION: Search between \"Description:\" and \"Keywords:\"\nif (descStart !== -1 && keyStart !== -1) {\n  description = cleanText.substring(descStart + 12, keyStart).trim();\n}\n\n// 3. EXTRACT KEYWORDS: Search from \"Keywords:\" to the end\nif (keyStart !== -1) {\n  let rawKeywords = cleanText.substring(keyStart + 9).trim();\n  // Handle edge cases where Gemini appends the category at the very end\n  keywords = rawKeywords.split(/category:/i)[0].trim();\n}\n\n// Final sanitization: replace structural line breaks with spaces\ntitle = title.replace(/\\n+/g, ' ');\ndescription = description.replace(/\\n+/g, ' ');\nkeywords = keywords.replace(/\\n+/g, ' ');\n\n// Return clean, structured data keys\nreturn {\n  extractedTitle: title,\n  extractedDescription: description,\n  extractedKeywords: keywords\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "aa4f0f2c-3624-4208-b3e6-d87a04ece056",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        192
+      ],
+      "id": "42070193-29d0-4bfa-bbde-a3b587bc4afc",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE",
+            "mode": "list",
+            "cachedResultName": "REMOVED_FOLDERNAME",
+            "cachedResultUrl": ""
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        0,
+        192
+      ],
+      "id": "ad0b7928-8b5f-4b6f-ac00-2df83a499416",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleApi": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Analyze an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        []
+      ]
+    },
+    "Analyze an image": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "051e7704-8833-4d2a-aa33-e1a17bb74bd1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": ""
+  },
+  "nodeGroups": [],
+  "id": "workflow-metadata-pipeline",
+  "tags": []
+}
